@@ -2,653 +2,145 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14161f" id="themeColorMeta">
 <title>Meine Erinnerungen</title>
-<style>
-  :root {
-    /* Palette: dunkle Tinte mit warmem "Wecker-Glühen" in Bernstein */
-    --bg: #14161f;
-    --card: #1c1e28;
-    --card2: #252733;
-    --line: #34362f;
-    --text: #f2efe9;
-    --muted: #a09a8e;
-    --accent: #f0a83c;
-    --accent2: #e07a3f;
-    --on-accent: #201304;
-    --ok: #7fc97f;
-    --warn: #f0a83c;
-    --danger: #e9705f;
-    --radius: 14px;
-  }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
-    background: linear-gradient(170deg, #14161f 0%, #191a22 55%, #201c1c 100%);
-    color: var(--text);
-    min-height: 100vh;
-    padding: 16px;
-  }
-  .wrap { max-width: 720px; margin: 0 auto; }
-  header { text-align: center; margin: 18px 0 22px; }
-  header h1 { font-size: 1.7rem; letter-spacing: .3px; }
-  header h1 .logo { margin-right: 8px; }
-  .greeting { color: var(--muted); margin-top: 6px; font-size: .95rem; }
-
-  .card {
-    background: var(--card);
-    border: 1px solid #2c2e3a;
-    border-radius: var(--radius);
-    padding: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 4px 18px rgba(0,0,0,.25);
-  }
-  .card h2 { font-size: 1.02rem; margin-bottom: 12px; color: #e6dfcf; display: flex; align-items: center; gap: 8px; }
-
-  input[type=text], input[type=datetime-local], input[type=number] {
-    width: 100%;
-    background: var(--card2);
-    color: var(--text);
-    border: 1px solid #3a3c48;
-    border-radius: 10px;
-    padding: 11px 12px;
-    font-size: 1rem;
-    outline: none;
-  }
-  input:focus { border-color: var(--accent); }
-  .row { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
-  .row > * { flex: 1; min-width: 140px; }
-
-  button {
-    background: var(--card2);
-    color: var(--text);
-    border: 1px solid #3a3c48;
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: .95rem;
-    cursor: pointer;
-    transition: transform .06s ease, background .15s ease;
-  }
-  button:hover { background: #2f313f; }
-  button:active { transform: scale(.97); }
-  button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
-  button.primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border: none;
-    color: var(--on-accent);
-    font-weight: 700;
-  }
-  button.small { padding: 6px 10px; font-size: .85rem; border-radius: 8px; }
-  button.ok { border-color: var(--ok); color: var(--ok); }
-  button.warn { border-color: var(--warn); color: var(--warn); }
-  button.danger { border-color: var(--danger); color: var(--danger); }
-
-  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .chip {
-    background: var(--card2);
-    border: 1px dashed #4c4535;
-    border-radius: 999px;
-    padding: 8px 14px;
-    font-size: .88rem;
-    cursor: pointer;
-  }
-  .chip:hover { border-style: solid; border-color: var(--accent); }
-  .chip .time { color: var(--accent); font-weight: 600; margin-left: 6px; }
-  .hint { color: var(--muted); font-size: .85rem; margin-top: 8px; }
-
-  .tabs { display: flex; gap: 8px; margin-bottom: 12px; }
-  .tabs button { flex: 1; }
-  .tabs button.active { background: linear-gradient(135deg, var(--accent), var(--accent2)); border: none; color: var(--on-accent); font-weight: 700; }
-
-  ul.reminders { list-style: none; }
-  li.reminder {
-    background: var(--card2);
-    border: 1px solid #33353f;
-    border-radius: 12px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
-  }
-  li.reminder.due { border-color: var(--warn); box-shadow: 0 0 0 1px var(--warn) inset; }
-  li.reminder.done { opacity: .55; }
-  li.reminder .top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
-  li.reminder .text { font-size: 1rem; font-weight: 600; word-break: break-word; }
-  li.reminder.done .text { text-decoration: line-through; }
-  li.reminder .when { color: var(--muted); font-size: .85rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
-  li.reminder .meta { color: var(--warn); font-size: .82rem; margin-top: 4px; }
-  li.reminder .meta.done-meta { color: var(--ok); }
-  li.reminder .actions { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
-  .empty { color: var(--muted); text-align: center; padding: 18px 0; }
-
-  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
-  .stat { background: var(--card2); border-radius: 10px; padding: 12px; }
-  .stat .label { color: var(--muted); font-size: .78rem; }
-  .stat .value { font-size: 1.05rem; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
-
-  .banner {
-    position: sticky; top: 8px; z-index: 50;
-    background: linear-gradient(135deg, #3a2a10, #4d3413);
-    border: 1px solid var(--warn);
-    border-radius: var(--radius);
-    padding: 14px;
-    margin-bottom: 14px;
-    display: none;
-  }
-  .banner.show { display: block; animation: pop .25s ease; }
-  .banner h3 { color: var(--warn); font-size: 1rem; margin-bottom: 8px; }
-  .banner .due-item { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 0; flex-wrap: wrap; }
-  @keyframes pop { from { transform: scale(.96); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-
-  #toast {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: var(--card2); border: 1px solid var(--accent);
-    border-radius: 999px; padding: 10px 20px; font-size: .9rem;
-    opacity: 0; pointer-events: none; transition: opacity .25s ease; z-index: 100;
-    max-width: 90vw; text-align: center;
-  }
-  #toast.show { opacity: 1; }
-  details.settings summary { cursor: pointer; color: var(--muted); font-size: .92rem; padding: 4px 0; }
-  .setting-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; flex-wrap: wrap; }
-  .setting-row label { font-size: .92rem; }
-  .setting-row input[type=number] { width: 110px; }
-  footer { text-align: center; color: var(--muted); font-size: .78rem; margin: 24px 0 10px; }
-</style>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div class="wrap">
-  <header>
-    <h1><span class="logo">⏰</span>Meine Erinnerungen</h1>
-    <div class="greeting" id="greeting"></div>
-  </header>
 
-  <div class="banner" id="dueBanner">
-    <h3>🔔 Jetzt fällig!</h3>
-    <div id="dueList"></div>
-  </div>
+<header class="topbar">
+  <div class="brand"><span class="logo">⏰</span>Meine Erinnerungen</div>
+  <div class="clock" id="clock">--:--</div>
+</header>
 
-  <div class="card">
-    <h2>✏️ Neue Erinnerung</h2>
-    <input type="text" id="newText" list="suggestions" placeholder="Was soll ich mir merken? (z.B. Zahnarzt anrufen)" autocomplete="off">
-    <datalist id="suggestions"></datalist>
-    <div class="row">
-      <input type="datetime-local" id="newTime">
-      <button class="primary" id="addBtn">Speichern 💾</button>
+<main id="main">
+
+  <!-- Ansicht: Erinnerungen -->
+  <section class="view active" data-view="liste">
+    <p class="greeting" id="greeting"></p>
+
+    <div class="banner" id="dueBanner">
+      <h3>🔔 Jetzt fällig!</h3>
+      <div id="dueList"></div>
     </div>
-    <div class="chips" style="margin-top:10px" id="quickTimes"></div>
-  </div>
 
-  <div class="card" id="templatesCard" style="display:none">
-    <h2>⚡ Blitz-Termine <span style="font-weight:400;color:var(--muted);font-size:.8rem">(von dir gelernt – 1 Klick genügt)</span></h2>
-    <div class="chips" id="templateChips"></div>
-    <div class="hint">Die App merkt sich, was du oft einträgst und zu welcher Uhrzeit – und schlägt es dir hier als 1-Klick-Termin vor.</div>
-  </div>
+    <div class="card" id="templatesCard" hidden>
+      <h2>⚡ Blitz-Termine <span class="sub">(gelernt – 1 Klick genügt)</span></h2>
+      <div class="chips" id="templateChips"></div>
+    </div>
 
-  <div class="card">
-    <h2>📋 Deine Erinnerungen</h2>
-    <div class="tabs">
+    <div class="tabs" id="tabs">
       <button data-filter="offen" class="active">Offen</button>
       <button data-filter="erledigt">Erledigt</button>
       <button data-filter="alle">Alle</button>
     </div>
     <ul class="reminders" id="reminderList"></ul>
-  </div>
+  </section>
 
-  <div class="card">
-    <h2>🧠 Was ich über dich gelernt habe</h2>
+  <!-- Ansicht: Profil / Gelerntes -->
+  <section class="view" data-view="profil">
+    <h2 class="viewtitle">🧠 Was ich über dich gelernt habe</h2>
     <div class="stats" id="statsGrid"></div>
-    <div class="hint" id="learnHint"></div>
-  </div>
+    <p class="hint" id="learnHint"></p>
+  </section>
 
-  <div class="card">
-    <details class="settings">
-      <summary>⚙️ Einstellungen</summary>
+  <!-- Ansicht: Einstellungen -->
+  <section class="view" data-view="einstellungen">
+    <h2 class="viewtitle">⚙️ Einstellungen</h2>
+
+    <div class="card group">
+      <h2>Allgemein</h2>
       <div class="setting-row">
-        <label for="reRemind">Erneut erinnern nach (Minuten, mind. 120 = 2&nbsp;Std.)</label>
+        <label for="setName">Dein Name <span class="sub">(für die Begrüßung)</span></label>
+        <input type="text" id="setName" placeholder="z. B. Anna" autocomplete="off">
+      </div>
+      <div class="setting-row">
+        <label for="setTheme">Design</label>
+        <select id="setTheme">
+          <option value="system">Wie System</option>
+          <option value="dunkel">Dunkel</option>
+          <option value="hell">Hell</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="card group">
+      <h2>Erinnern</h2>
+      <div class="setting-row">
+        <label for="reRemind">Erneut erinnern nach <span class="sub">(Minuten, mind. 120 = 2 Std.)</span></label>
         <input type="number" id="reRemind" min="120" step="10">
       </div>
       <div class="setting-row">
-        <label for="notifToggle">Browser-Benachrichtigungen</label>
-        <input type="checkbox" id="notifToggle">
+        <label for="notifToggle">Benachrichtigungen</label>
+        <label class="switch"><input type="checkbox" id="notifToggle"><span></span></label>
       </div>
       <div class="setting-row">
-        <label>Alle Daten löschen (Erinnerungen + Gelerntes)</label>
-        <button class="small danger" id="resetBtn">Zurücksetzen</button>
+        <label for="soundToggle">Ton</label>
+        <label class="switch"><input type="checkbox" id="soundToggle"><span></span></label>
       </div>
-    </details>
-  </div>
+      <div class="setting-row">
+        <label for="vibrToggle">Vibration</label>
+        <label class="switch"><input type="checkbox" id="vibrToggle"><span></span></label>
+      </div>
+      <button id="testNotif">🔔 Test-Benachrichtigung senden</button>
+    </div>
 
-  <footer>Alle Daten bleiben privat in deinem Browser gespeichert. Lass die Seite geöffnet, damit Erinnerungen klingeln können.</footer>
+    <div class="card group">
+      <h2>App &amp; Daten</h2>
+      <div class="setting-row">
+        <label>Als App installieren</label>
+        <button id="installBtn" hidden>📲 Installieren</button>
+      </div>
+      <p class="hint" id="installHint"></p>
+      <div class="setting-row">
+        <label for="pushUrl">Push-Server-URL <span class="sub">(optional – für Push bei geschlossener App)</span></label>
+        <input type="url" id="pushUrl" placeholder="https://…" autocomplete="off">
+      </div>
+      <div class="btnrow">
+        <button id="exportBtn">⬇️ Daten exportieren</button>
+        <button id="importBtn">⬆️ Daten importieren</button>
+        <input type="file" id="importFile" accept="application/json" hidden>
+      </div>
+      <div class="setting-row">
+        <label>Alle Erinnerungen und alles Gelernte löschen</label>
+        <button class="danger" id="resetBtn">Zurücksetzen</button>
+      </div>
+    </div>
+
+    <p class="hint">Alle Daten bleiben privat auf deinem Gerät gespeichert.</p>
+  </section>
+
+</main>
+
+<button class="fab" id="fabBtn" aria-label="Neue Erinnerung anlegen">+</button>
+
+<nav class="bottomnav">
+  <button class="navbtn active" data-view="liste"><span class="ico">📋</span>Erinnerungen</button>
+  <button class="navbtn" data-view="profil"><span class="ico">🧠</span>Profil</button>
+  <button class="navbtn" data-view="einstellungen"><span class="ico">⚙️</span>Einstellungen</button>
+</nav>
+
+<div class="backdrop" id="backdrop"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Neue Erinnerung">
+  <div class="grip" aria-hidden="true"></div>
+  <h2>✏️ Neue Erinnerung</h2>
+  <input type="text" id="newText" list="suggestions" placeholder="Was soll ich mir merken?" autocomplete="off">
+  <datalist id="suggestions"></datalist>
+  <input type="datetime-local" id="newTime">
+  <div class="chips" id="quickTimes"></div>
+  <button class="primary big" id="addBtn">Speichern 💾</button>
 </div>
-<div id="toast"></div>
 
-<script>
-(function () {
-  "use strict";
+<div id="toast" role="status"></div>
 
-  const KEY_REMINDERS = "erinnerungen.v1";
-  const KEY_PROFILE = "profil.v1";
-  const MIN_REREMIND_MIN = 120; // mindestens 2 Stunden
-  const STOPWORDS = new Set(["und","der","die","das","den","dem","ein","eine","einen","mit","für","fuer","auf","bei","von","zum","zur","ich","mir","mich","nicht","noch","mal","bitte","heute","morgen","abend","uhr","dann","auch","aber","wieder","gehen","machen"]);
-
-  let reminders = load(KEY_REMINDERS, []);
-  let profile = load(KEY_PROFILE, {
-    textStats: {},   // gelernte Erinnerungs-Texte: {key: {text, count, hours:{h:n}}}
-    hourCounts: {},  // gelernte Lieblings-Uhrzeiten
-    wordCounts: {},  // gelernte Themen-Wörter
-    created: 0, done: 0, doneMinutesTotal: 0,
-    settings: { reRemindMinutes: MIN_REREMIND_MIN, notifications: true },
-    firstUse: Date.now()
-  });
-  let filter = "offen";
-  let audioCtx = null;
-
-  // ---------- Speicher ----------
-  function load(key, fallback) {
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) return fallback;
-      const parsed = JSON.parse(raw);
-      return Object.assign(fallback, parsed);
-    } catch (e) { return fallback; }
-  }
-  function save() {
-    localStorage.setItem(KEY_REMINDERS, JSON.stringify(reminders));
-    localStorage.setItem(KEY_PROFILE, JSON.stringify(profile));
-  }
-
-  // ---------- Zeit-Hilfen ----------
-  function toInputValue(d) {
-    const p = n => String(n).padStart(2, "0");
-    return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + "T" + p(d.getHours()) + ":" + p(d.getMinutes());
-  }
-  function fmt(ts) {
-    const d = new Date(ts);
-    const today = new Date(); const tomorrow = new Date(); tomorrow.setDate(today.getDate() + 1);
-    const sameDay = (a, b) => a.toDateString() === b.toDateString();
-    const time = d.toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" });
-    if (sameDay(d, today)) return "heute " + time;
-    if (sameDay(d, tomorrow)) return "morgen " + time;
-    return d.toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit" }) + " " + time;
-  }
-  function nextOccurrence(hour) {
-    const d = new Date();
-    d.setHours(hour, 0, 0, 0);
-    if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
-    return d;
-  }
-
-  // ---------- Lernen ----------
-  function learnFrom(text, dueAt) {
-    const key = text.trim().toLowerCase();
-    const hour = new Date(dueAt).getHours();
-    const stat = profile.textStats[key] || { text: text.trim(), count: 0, hours: {} };
-    stat.text = text.trim();
-    stat.count++;
-    stat.hours[hour] = (stat.hours[hour] || 0) + 1;
-    profile.textStats[key] = stat;
-    profile.hourCounts[hour] = (profile.hourCounts[hour] || 0) + 1;
-    for (const w of key.split(/[^a-zäöüß]+/i)) {
-      if (w.length >= 3 && !STOPWORDS.has(w)) {
-        profile.wordCounts[w] = (profile.wordCounts[w] || 0) + 1;
-      }
-    }
-    profile.created++;
-  }
-  function learnDone(reminder) {
-    profile.done++;
-    const minutes = Math.max(0, (Date.now() - reminder.dueAt) / 60000);
-    profile.doneMinutesTotal += Math.min(minutes, 24 * 60); // Ausreißer begrenzen
-  }
-  function topEntries(obj, n) {
-    return Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, n);
-  }
-  function bestHour(hours) {
-    const top = topEntries(hours, 1);
-    return top.length ? parseInt(top[0][0], 10) : 9;
-  }
-  function suggestedDefaultTime() {
-    const top = topEntries(profile.hourCounts, 1);
-    if (top.length && top[0][1] >= 3) return nextOccurrence(parseInt(top[0][0], 10));
-    const d = new Date(Date.now() + 60 * 60000);
-    d.setSeconds(0, 0);
-    return d;
-  }
-  function learnedTemplates() {
-    return Object.values(profile.textStats)
-      .filter(s => s.count >= 2)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 6);
-  }
-
-  // ---------- Erinnerungen ----------
-  function addReminder(text, dueAt, quiet) {
-    text = text.trim();
-    if (!text) { toast("Bitte zuerst einen Text eingeben ✏️"); return false; }
-    reminders.push({
-      id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
-      text: text,
-      dueAt: dueAt,
-      createdAt: Date.now(),
-      status: "offen",
-      lastNotifiedAt: null,
-      notifyCount: 0
-    });
-    learnFrom(text, dueAt);
-    save();
-    render();
-    if (!quiet) toast("Gespeichert: „" + text + "“ – " + fmt(dueAt) + " ✅");
-    requestNotifPermission();
-    return true;
-  }
-  function markDone(id) {
-    const r = reminders.find(x => x.id === id);
-    if (!r || r.status === "erledigt") return;
-    r.status = "erledigt";
-    r.doneAt = Date.now();
-    learnDone(r);
-    save();
-    render();
-    toast("Erledigt! 🎉");
-  }
-  function snooze(id, minutes) {
-    const r = reminders.find(x => x.id === id);
-    if (!r) return;
-    r.dueAt = Date.now() + minutes * 60000;
-    r.lastNotifiedAt = null;
-    save();
-    render();
-    toast("Verschoben auf " + fmt(r.dueAt));
-  }
-  function removeReminder(id) {
-    reminders = reminders.filter(x => x.id !== id);
-    save();
-    render();
-  }
-
-  // ---------- Benachrichtigen (inkl. Wieder-Erinnerung nach mind. 2 Std.) ----------
-  function reRemindMs() {
-    return Math.max(MIN_REREMIND_MIN, profile.settings.reRemindMinutes || MIN_REREMIND_MIN) * 60000;
-  }
-  function tick() {
-    const now = Date.now();
-    let fired = false;
-    for (const r of reminders) {
-      if (r.status !== "offen" || r.dueAt > now) continue;
-      const shouldFire = r.lastNotifiedAt === null || (now - r.lastNotifiedAt >= reRemindMs());
-      if (shouldFire) {
-        r.lastNotifiedAt = now;
-        r.notifyCount = (r.notifyCount || 0) + 1;
-        notify(r);
-        fired = true;
-      }
-    }
-    if (fired) save();
-    render();
-  }
-  function notify(r) {
-    const again = r.notifyCount > 1 ? " (Wieder-Erinnerung " + r.notifyCount + ")" : "";
-    if (profile.settings.notifications && "Notification" in window && Notification.permission === "granted") {
-      try {
-        new Notification("⏰ Erinnerung" + again, { body: r.text, tag: r.id, renotify: true });
-      } catch (e) { /* z.B. auf Mobilgeräten ohne Service Worker */ }
-    }
-    beep();
-  }
-  function beep() {
-    try {
-      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
-      const o = audioCtx.createOscillator();
-      const g = audioCtx.createGain();
-      o.connect(g); g.connect(audioCtx.destination);
-      o.frequency.value = 880;
-      g.gain.setValueAtTime(0.15, audioCtx.currentTime);
-      g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.6);
-      o.start(); o.stop(audioCtx.currentTime + 0.6);
-    } catch (e) { /* Ton optional */ }
-  }
-  function requestNotifPermission() {
-    if (profile.settings.notifications && "Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-  }
-
-  // ---------- Anzeige ----------
-  function el(tag, cls, text) {
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text !== undefined) e.textContent = text;
-    return e;
-  }
-  function toast(msg) {
-    const t = document.getElementById("toast");
-    t.textContent = msg;
-    t.classList.add("show");
-    clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove("show"), 2600);
-  }
-
-  function render() {
-    renderGreeting();
-    renderBanner();
-    renderList();
-    renderTemplates();
-    renderQuickTimes();
-    renderStats();
-    renderSuggestions();
-  }
-
-  function renderGreeting() {
-    const h = new Date().getHours();
-    const part = h < 11 ? "Guten Morgen" : h < 18 ? "Hallo" : "Guten Abend";
-    const open = reminders.filter(r => r.status === "offen").length;
-    let extra = open === 0 ? "Alles erledigt – stark! ✨" : open + (open === 1 ? " offene Erinnerung." : " offene Erinnerungen.");
-    document.getElementById("greeting").textContent = part + "! " + extra;
-  }
-
-  function renderBanner() {
-    const now = Date.now();
-    const due = reminders.filter(r => r.status === "offen" && r.dueAt <= now);
-    const banner = document.getElementById("dueBanner");
-    const list = document.getElementById("dueList");
-    list.innerHTML = "";
-    if (!due.length) { banner.classList.remove("show"); return; }
-    banner.classList.add("show");
-    for (const r of due) {
-      const row = el("div", "due-item");
-      row.appendChild(el("strong", "", r.text));
-      const btns = el("div", "");
-      const done = el("button", "small ok", "Erledigt ✓");
-      done.onclick = () => markDone(r.id);
-      const later = el("button", "small warn", "+2 Std. ⏳");
-      later.style.marginLeft = "6px";
-      later.onclick = () => snooze(r.id, 120);
-      btns.appendChild(done); btns.appendChild(later);
-      row.appendChild(btns);
-      list.appendChild(row);
-    }
-  }
-
-  function renderList() {
-    const ul = document.getElementById("reminderList");
-    ul.innerHTML = "";
-    const now = Date.now();
-    let items = reminders.slice().sort((a, b) => a.dueAt - b.dueAt);
-    if (filter === "offen") items = items.filter(r => r.status === "offen");
-    if (filter === "erledigt") items = items.filter(r => r.status === "erledigt").sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
-    if (!items.length) {
-      ul.appendChild(el("div", "empty", filter === "erledigt" ? "Noch nichts erledigt." : "Keine Erinnerungen – schreib dir oben etwas auf! 📝"));
-      return;
-    }
-    for (const r of items) {
-      const li = el("li", "reminder" + (r.status === "erledigt" ? " done" : (r.dueAt <= now ? " due" : "")));
-      const top = el("div", "top");
-      top.appendChild(el("div", "text", r.text));
-      top.appendChild(el("div", "when", fmt(r.dueAt)));
-      li.appendChild(top);
-      if (r.status === "offen" && r.lastNotifiedAt) {
-        const nextAt = r.lastNotifiedAt + reRemindMs();
-        li.appendChild(el("div", "meta", "🔁 " + r.notifyCount + "× erinnert – nächste Wieder-Erinnerung " + fmt(nextAt)));
-      }
-      if (r.status === "erledigt" && r.doneAt) {
-        li.appendChild(el("div", "meta done-meta", "✓ erledigt " + fmt(r.doneAt)));
-      }
-      const actions = el("div", "actions");
-      if (r.status === "offen") {
-        const done = el("button", "small ok", "Erledigt ✓");
-        done.onclick = () => markDone(r.id);
-        actions.appendChild(done);
-        const later = el("button", "small warn", "+2 Std. ⏳");
-        later.onclick = () => snooze(r.id, 120);
-        actions.appendChild(later);
-      }
-      const del = el("button", "small danger", "Löschen 🗑");
-      del.onclick = () => removeReminder(r.id);
-      actions.appendChild(del);
-      li.appendChild(actions);
-      ul.appendChild(li);
-    }
-  }
-
-  function renderTemplates() {
-    const card = document.getElementById("templatesCard");
-    const box = document.getElementById("templateChips");
-    const templates = learnedTemplates();
-    box.innerHTML = "";
-    if (!templates.length) { card.style.display = "none"; return; }
-    card.style.display = "";
-    for (const t of templates) {
-      const hour = bestHour(t.hours);
-      const chip = el("button", "chip");
-      chip.appendChild(document.createTextNode(t.text));
-      chip.appendChild(el("span", "time", String(hour).padStart(2, "0") + ":00 Uhr"));
-      chip.title = t.count + "× von dir eingetragen";
-      chip.onclick = () => {
-        const when = nextOccurrence(hour);
-        addReminder(t.text, when.getTime(), true);
-        toast("⚡ 1-Klick-Termin: „" + t.text + "“ – " + fmt(when.getTime()));
-      };
-      box.appendChild(chip);
-    }
-  }
-
-  function renderQuickTimes() {
-    const box = document.getElementById("quickTimes");
-    box.innerHTML = "";
-    const options = [
-      ["⚡ In 2 Std.", () => new Date(Date.now() + 120 * 60000)],
-      ["🌆 Heute 18:00", () => { const d = new Date(); d.setHours(18, 0, 0, 0); return d; }],
-      ["🌅 Morgen 09:00", () => { const d = new Date(); d.setDate(d.getDate() + 1); d.setHours(9, 0, 0, 0); return d; }]
-    ];
-    for (const [label, getDate] of options) {
-      const b = el("button", "chip", label);
-      b.onclick = () => {
-        const d = getDate();
-        if (d.getTime() <= Date.now()) d.setDate(d.getDate() + 1);
-        document.getElementById("newTime").value = toInputValue(d);
-        const text = document.getElementById("newText").value;
-        if (text.trim()) { addAndClear(); }
-        else toast("Zeit gesetzt: " + fmt(d.getTime()) + " – jetzt noch den Text eingeben ✏️");
-      };
-      box.appendChild(b);
-    }
-  }
-
-  function renderStats() {
-    const grid = document.getElementById("statsGrid");
-    grid.innerHTML = "";
-    const topHour = topEntries(profile.hourCounts, 1);
-    const topWords = topEntries(profile.wordCounts, 3).map(e => e[0]);
-    const rate = profile.created ? Math.round((profile.done / profile.created) * 100) : 0;
-    const avgMin = profile.done ? Math.round(profile.doneMinutesTotal / profile.done) : null;
-    const stats = [
-      ["Eingetragene Erinnerungen", String(profile.created)],
-      ["Davon erledigt", profile.done + " (" + rate + " %)"],
-      ["Deine Lieblings-Uhrzeit", topHour.length ? String(topHour[0][0]).padStart(2, "0") + ":00 Uhr" : "lerne ich noch …"],
-      ["Deine häufigsten Themen", topWords.length ? topWords.join(", ") : "lerne ich noch …"],
-      ["Tempo nach Fälligkeit", avgMin === null ? "lerne ich noch …" : "Ø " + avgMin + " Min. bis erledigt"]
-    ];
-    for (const [label, value] of stats) {
-      const s = el("div", "stat");
-      s.appendChild(el("div", "label", label));
-      s.appendChild(el("div", "value", value));
-      grid.appendChild(s);
-    }
-    const hint = document.getElementById("learnHint");
-    if (profile.created < 2) {
-      hint.textContent = "Je mehr du einträgst, desto besser lerne ich deine Gewohnheiten – ab dem 2. gleichen Eintrag bekommst du Blitz-Termine mit 1 Klick.";
-    } else if (avgMin !== null && avgMin > Math.max(120, profile.settings.reRemindMinutes)) {
-      hint.textContent = "Ich habe gelernt: Du brauchst oft etwas länger – deshalb erinnere ich dich zuverlässig alle " + Math.round(reRemindMs() / 60000) + " Minuten erneut, bis du „Erledigt“ klickst.";
-    } else {
-      hint.textContent = "Ich nutze deine Gewohnheiten für Vorschläge: Uhrzeit-Vorauswahl, Text-Vervollständigung und Blitz-Termine.";
-    }
-  }
-
-  function renderSuggestions() {
-    const dl = document.getElementById("suggestions");
-    dl.innerHTML = "";
-    for (const [key] of topEntries(profile.textStats, 10)) {
-      const opt = document.createElement("option");
-      opt.value = profile.textStats[key].text;
-      dl.appendChild(opt);
-    }
-  }
-
-  // ---------- Formular ----------
-  function addAndClear() {
-    const textInput = document.getElementById("newText");
-    const timeInput = document.getElementById("newTime");
-    let due = timeInput.value ? new Date(timeInput.value).getTime() : suggestedDefaultTime().getTime();
-    if (isNaN(due)) due = suggestedDefaultTime().getTime();
-    if (addReminder(textInput.value, due)) {
-      textInput.value = "";
-      timeInput.value = toInputValue(suggestedDefaultTime());
-      textInput.focus();
-    }
-  }
-
-  // ---------- Einstellungen ----------
-  function initSettings() {
-    const re = document.getElementById("reRemind");
-    const nt = document.getElementById("notifToggle");
-    re.value = Math.max(MIN_REREMIND_MIN, profile.settings.reRemindMinutes || MIN_REREMIND_MIN);
-    nt.checked = profile.settings.notifications !== false;
-    re.onchange = () => {
-      const v = Math.max(MIN_REREMIND_MIN, parseInt(re.value, 10) || MIN_REREMIND_MIN);
-      re.value = v;
-      profile.settings.reRemindMinutes = v;
-      save(); render();
-      toast("Wieder-Erinnerung alle " + v + " Minuten");
-    };
-    nt.onchange = () => {
-      profile.settings.notifications = nt.checked;
-      save();
-      if (nt.checked) requestNotifPermission();
-    };
-    document.getElementById("resetBtn").onclick = () => {
-      if (confirm("Wirklich ALLE Erinnerungen und alles Gelernte löschen?")) {
-        localStorage.removeItem(KEY_REMINDERS);
-        localStorage.removeItem(KEY_PROFILE);
-        location.reload();
-      }
-    };
-  }
-
-  // ---------- Start ----------
-  document.getElementById("addBtn").onclick = addAndClear;
-  document.getElementById("newText").addEventListener("keydown", e => { if (e.key === "Enter") addAndClear(); });
-  for (const btn of document.querySelectorAll(".tabs button")) {
-    btn.onclick = () => {
-      filter = btn.dataset.filter;
-      document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("active", b === btn));
-      renderList();
-    };
-  }
-  document.getElementById("newTime").value = toInputValue(suggestedDefaultTime());
-  initSettings();
-  render();
-  setInterval(tick, 20000); // alle 20 Sekunden prüfen
-  tick();
-})();
-</script>
+<script src="js/storage.js"></script>
+<script src="js/learning.js"></script>
+<script src="js/notify.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/app.js"></script>
 </body>
 </html>
