@@ -1,0 +1,17 @@
+{
+  "name": "erinnerungen-push-server",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Optionaler Web-Push-Server für die App 'Meine Erinnerungen'",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "web-push": "^3.6.7"
+  }
+}
