@@ -24,10 +24,11 @@ auf deinem Gerät.
 
 ## 📱 Auf dem Handy installieren (Android)
 
-1. **GitHub Pages einmalig aktivieren:** Repository → **Settings → Pages** → unter
-   „Build and deployment" als Source **„GitHub Actions"** wählen. Beim nächsten Push
-   auf `main` veröffentlicht der mitgelieferte Workflow (`.github/workflows/pages.yml`)
-   die App automatisch unter `https://<benutzername>.github.io/app/`.
+1. **Voraussetzung:** Das Repository muss **öffentlich** sein (GitHub Pages ist im
+   kostenlosen Tarif nur für öffentliche Repositories verfügbar). Der mitgelieferte
+   Workflow (`.github/workflows/pages.yml`) aktiviert Pages dann selbst und
+   veröffentlicht die App bei jedem Push auf `main` automatisch unter
+   `https://<benutzername>.github.io/app/`.
 2. Diese Adresse am Handy in Chrome öffnen.
 3. Menü (⋮) → **„Zum Startbildschirm hinzufügen"** (oder den Installieren-Button in den
    App-Einstellungen antippen).
