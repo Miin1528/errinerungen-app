@@ -60,11 +60,17 @@
   };
 
   // ---------- Bottom-Sheet ----------
-  App.openSheet = function () {
-    document.getElementById("newTime").value = App.toInputValue(App.suggestedDefaultTime());
-    document.getElementById("newRepeat").value = "";
-    App.sheetKat = "sonstiges";
-    App.sheetKatManuell = false;
+  App.editId = null;
+  App.openSheet = function (editId) {
+    App.editId = editId || null;
+    const r = App.editId ? App.reminders.find(x => x.id === App.editId) : null;
+    document.getElementById("sheetTitel").textContent = r ? "✏️ Erinnerung bearbeiten" : "✏️ Neue Erinnerung";
+    document.getElementById("addBtn").textContent = r ? "Änderungen speichern ✅" : "Speichern 💾";
+    document.getElementById("newText").value = r ? r.text : "";
+    document.getElementById("newTime").value = App.toInputValue(r ? new Date(r.dueAt) : App.suggestedDefaultTime());
+    document.getElementById("newRepeat").value = r ? (r.repeat || "") : "";
+    App.sheetKat = r ? (r.kat || "sonstiges") : "sonstiges";
+    App.sheetKatManuell = !!r; // beim Bearbeiten den Vorschlag nicht überschreiben
     App.renderKatChips();
     document.getElementById("backdrop").classList.add("show");
     document.getElementById("sheet").classList.add("open");
@@ -198,6 +204,9 @@
         const later = App.el("button", "small warn", "+2 Std. ⏳");
         later.onclick = () => App.snooze(r.id, 120);
         actions.appendChild(later);
+        const edit = App.el("button", "small", "Bearbeiten ✏️");
+        edit.onclick = () => App.openSheet(r.id);
+        actions.appendChild(edit);
         const gcal = App.el("button", "small", "📅");
         gcal.title = "In Google Kalender eintragen";
         gcal.setAttribute("aria-label", "In Google Kalender eintragen");
