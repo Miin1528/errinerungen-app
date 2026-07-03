@@ -325,6 +325,16 @@
     navigator.serviceWorker.addEventListener("message", e => {
       if (e.data && e.data.typ === "benachrichtigung") handleNotifAction(e.data.action, e.data.id);
     });
+    // Neue App-Version übernimmt? Einmal neu laden, damit Updates sofort ankommen
+    // (nur wenn vorher schon ein Service Worker aktiv war – nicht beim allerersten Besuch)
+    const hatteController = !!navigator.serviceWorker.controller;
+    let neuGeladen = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (!hatteController || neuGeladen) return;
+      neuGeladen = true;
+      App.toast("App wurde aktualisiert ✨");
+      setTimeout(() => location.reload(), 900);
+    });
   }
 
   // ---------- Start ----------
@@ -359,6 +369,13 @@
   // ---------- Kalender-Navigation ----------
   document.getElementById("kalZurueck").onclick = () => App.kalWechsel(-1);
   document.getElementById("kalVor").onclick = () => App.kalWechsel(1);
+  for (const btn of document.querySelectorAll("#kalModusTabs button")) {
+    btn.onclick = () => {
+      App.kalModus = btn.dataset.modus;
+      document.querySelectorAll("#kalModusTabs button").forEach(b => b.classList.toggle("active", b === btn));
+      App.renderKalender();
+    };
+  }
 
   // ---------- Spracheingabe (Web Speech API) ----------
   (function initSprache() {

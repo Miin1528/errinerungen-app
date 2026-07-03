@@ -7,6 +7,13 @@
 
   App.kalMonat = (() => { const d = heute0(); d.setDate(1); return d; })();
   App.kalTag = heute0().getTime();
+  App.kalModus = "privat"; // "privat" = alles außer Arbeit, "arbeit" = nur Arbeitstermine
+
+  /* Arbeitstermine erscheinen NUR im Arbeits-Kalender */
+  function imModus(r) {
+    const istArbeit = (r.kat || "sonstiges") === "arbeit";
+    return App.kalModus === "arbeit" ? istArbeit : !istArbeit;
+  }
 
   App.gcalUrl = function (r) {
     const p = n => String(n).padStart(2, "0");
@@ -32,9 +39,10 @@
     document.getElementById("kalTitel").textContent =
       monat.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
 
-    // Erinnerungen nach Tag gruppieren
+    // Erinnerungen nach Tag gruppieren (je nach gewähltem Kalender)
     const proTag = {};
     for (const r of App.reminders) {
+      if (!imModus(r)) continue;
       (proTag[tagKey(r.dueAt)] = proTag[tagKey(r.dueAt)] || []).push(r);
     }
 
@@ -70,8 +78,9 @@
     const titel = document.getElementById("kalTagTitel");
     const liste = document.getElementById("kalTagListe");
     const tagesEintraege = (proTag[tagKey(App.kalTag)] || []).sort((a, b) => a.dueAt - b.dueAt);
-    titel.textContent = new Date(App.kalTag).toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" }) +
-      (tagesEintraege.length ? "" : " – keine Erinnerungen");
+    titel.textContent = (App.kalModus === "arbeit" ? "💼 " : "") +
+      new Date(App.kalTag).toLocaleDateString("de-DE", { weekday: "long", day: "2-digit", month: "long" }) +
+      (tagesEintraege.length ? "" : (App.kalModus === "arbeit" ? " – keine Arbeitstermine" : " – keine Erinnerungen"));
     liste.innerHTML = "";
     for (const r of tagesEintraege) {
       const li = App.el("li", "reminder" + (r.status === "erledigt" ? " done" : ""));
