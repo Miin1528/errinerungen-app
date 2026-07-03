@@ -377,6 +377,7 @@ li.reminder .katinfo { color: var(--muted); font-size: .8rem; margin-top: 4px; }
 .kaltag .dots { display: flex; gap: 3px; height: 6px; }
 .kaltag .dots i { width: 5px; height: 5px; border-radius: 50%; }
 .kaltag-titel { margin: 16px 2px 10px; font-size: .95rem; color: var(--muted); font-weight: 600; }
+.ics-export { width: 100%; margin-top: 12px; }
 
 /* ---------- Glas-Design: durchscheinende Flächen mit Blur ---------- */
 :root, [data-theme="dunkel"] {

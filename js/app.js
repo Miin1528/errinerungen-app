@@ -377,6 +377,7 @@
   // ---------- Kalender-Navigation ----------
   document.getElementById("kalZurueck").onclick = () => App.kalWechsel(-1);
   document.getElementById("kalVor").onclick = () => App.kalWechsel(1);
+  document.getElementById("icsExport").onclick = () => App.icsExport();
   for (const btn of document.querySelectorAll("#kalModusTabs button")) {
     btn.onclick = () => {
       App.kalModus = btn.dataset.modus;
