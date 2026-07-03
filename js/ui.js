@@ -69,8 +69,11 @@
     document.getElementById("newText").value = r ? r.text : "";
     document.getElementById("newTime").value = App.toInputValue(r ? new Date(r.dueAt) : App.suggestedDefaultTime());
     document.getElementById("newRepeat").value = r ? (r.repeat || "") : "";
-    App.sheetKat = r ? (r.kat || "sonstiges") : "sonstiges";
-    App.sheetKatManuell = !!r; // beim Bearbeiten den Vorschlag nicht überschreiben
+    // Im Arbeits-Kalender bekommen neue Termine automatisch die Kategorie Arbeit
+    const aktiveAnsicht = document.querySelector(".view.active");
+    const imArbeitsKalender = !r && aktiveAnsicht && aktiveAnsicht.dataset.view === "kalender" && App.kalModus === "arbeit";
+    App.sheetKat = r ? (r.kat || "sonstiges") : (imArbeitsKalender ? "arbeit" : "sonstiges");
+    App.sheetKatManuell = !!r || imArbeitsKalender;
     App.renderKatChips();
     document.getElementById("backdrop").classList.add("show");
     document.getElementById("sheet").classList.add("open");
