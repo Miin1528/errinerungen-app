@@ -18,6 +18,14 @@ auf deinem Gerät.
 - **🧠 Die App lernt dich kennen** – häufige Erinnerungen (→ Blitz-Termine),
   Lieblings-Uhrzeit (→ Zeit-Vorauswahl), häufigste Themen, dein Erledigungs-Tempo und
   Text-Vervollständigung aus früheren Einträgen. Alles einsehbar im Bereich **Profil**.
+- **🔁 Wiederholende Erinnerungen** – täglich, wöchentlich oder monatlich: Nach dem
+  Abhaken legt die App den nächsten Termin automatisch an.
+- **🏷 Kategorien & Suche** – farbige Kategorien (Gesundheit, Arbeit, Privat, Einkaufen,
+  Sonstiges) mit automatischem Vorschlag beim Tippen, Filter-Chips und Volltextsuche.
+- **📅 Kalender-Ansicht** – Monatsübersicht mit farbigen Kategorie-Punkten, Tages-Detail
+  und einem Knopf, der einen Termin zusätzlich in deinen Google Kalender überträgt.
+- **🎤 Spracheingabe** – Erinnerungen diktieren; „morgen um 9 Uhr Zahnarzt anrufen"
+  setzt Text und Uhrzeit automatisch (Web Speech API, sofern der Browser sie kann).
 - **⚙️ Einstellungen** – Name für die Begrüßung, Design (Dunkel/Hell/System),
   Wieder-Erinnerungs-Intervall, Benachrichtigungen/Ton/Vibration, Test-Benachrichtigung,
   App-Installation, Daten-Export/-Import, optionale Push-Server-URL.

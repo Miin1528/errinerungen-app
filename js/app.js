@@ -3,8 +3,9 @@
 (function () {
 
   // ---------- Aktionen ----------
-  App.addReminder = function (text, dueAt, quiet) {
+  App.addReminder = function (text, dueAt, quiet, extra) {
     text = text.trim();
+    extra = extra || {};
     if (!text) { App.toast("Bitte zuerst einen Text eingeben ✏️"); return false; }
     App.reminders.push({
       id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
@@ -13,9 +14,11 @@
       createdAt: Date.now(),
       status: "offen",
       lastNotifiedAt: null,
-      notifyCount: 0
+      notifyCount: 0,
+      kat: extra.kat || null,
+      repeat: extra.repeat || null
     });
-    App.learnFrom(text, dueAt);
+    App.learnFrom(text, dueAt, extra.kat);
     App.save();
     App.render();
     App.syncPush();
@@ -31,10 +34,27 @@
       r.status = "erledigt";
       r.doneAt = Date.now();
       App.learnDone(r);
+      let meldung = "Erledigt! 🎉";
+      if (r.repeat) { // Wiederholung: nächsten Termin automatisch anlegen
+        const next = new Date(r.dueAt);
+        const jetzt = Date.now();
+        do {
+          if (r.repeat === "taeglich") next.setDate(next.getDate() + 1);
+          else if (r.repeat === "woechentlich") next.setDate(next.getDate() + 7);
+          else next.setMonth(next.getMonth() + 1);
+        } while (next.getTime() <= jetzt);
+        App.reminders.push({
+          id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+          text: r.text, dueAt: next.getTime(), createdAt: Date.now(),
+          status: "offen", lastNotifiedAt: null, notifyCount: 0,
+          kat: r.kat || null, repeat: r.repeat
+        });
+        meldung = "Erledigt! 🎉 Nächster Termin: " + App.fmt(next.getTime());
+      }
       App.save();
       App.render();
       App.syncPush();
-      App.toast("Erledigt! 🎉");
+      App.toast(meldung);
     };
     const li = document.querySelector('li.reminder[data-id="' + id + '"]');
     if (li && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -73,7 +93,11 @@
     const timeInput = document.getElementById("newTime");
     let due = timeInput.value ? new Date(timeInput.value).getTime() : App.suggestedDefaultTime().getTime();
     if (isNaN(due)) due = App.suggestedDefaultTime().getTime();
-    if (App.addReminder(textInput.value, due)) {
+    const extra = {
+      kat: App.sheetKat || "sonstiges",
+      repeat: document.getElementById("newRepeat").value || null
+    };
+    if (App.addReminder(textInput.value, due, false, extra)) {
       textInput.value = "";
       App.closeSheet();
     }
@@ -292,6 +316,90 @@
   document.getElementById("addBtn").onclick = App.addAndClear;
   document.getElementById("newText").addEventListener("keydown", e => { if (e.key === "Enter") App.addAndClear(); });
   document.addEventListener("keydown", e => { if (e.key === "Escape") App.closeSheet(); });
+
+  // Kategorie automatisch vorschlagen, während man tippt (bis man selbst wählt)
+  document.getElementById("newText").addEventListener("input", e => {
+    if (!App.sheetKatManuell && e.target.value.trim().length >= 3) {
+      const vorschlag = App.suggestKat(e.target.value);
+      if (vorschlag !== App.sheetKat) { App.sheetKat = vorschlag; App.renderKatChips(); }
+    }
+  });
+
+  // ---------- Suche ----------
+  document.getElementById("suchFeld").addEventListener("input", e => {
+    App.suche = e.target.value.trim().toLowerCase();
+    App.render();
+  });
+
+  // ---------- Kalender-Navigation ----------
+  document.getElementById("kalZurueck").onclick = () => App.kalWechsel(-1);
+  document.getElementById("kalVor").onclick = () => App.kalWechsel(1);
+
+  // ---------- Spracheingabe (Web Speech API) ----------
+  (function initSprache() {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const micBtn = document.getElementById("micBtn");
+    if (!SR) return; // Browser ohne Spracherkennung: Knopf bleibt versteckt
+    micBtn.hidden = false;
+    let rec = null;
+
+    // versteht z. B. "morgen um 9 Uhr Zahnarzt anrufen"
+    function parseSprache(gesagt) {
+      let text = gesagt;
+      let zeit = null;
+      const um = text.match(/\bum (\d{1,2})(?::(\d{2}))? ?(uhr)?\b/i);
+      const morgen = /\bmorgen\b/i.test(text);
+      if (um) {
+        zeit = new Date();
+        zeit.setHours(parseInt(um[1], 10), um[2] ? parseInt(um[2], 10) : 0, 0, 0);
+        if (morgen) zeit.setDate(zeit.getDate() + 1);
+        else if (zeit.getTime() <= Date.now()) zeit.setDate(zeit.getDate() + 1);
+      } else if (morgen) {
+        zeit = new Date();
+        zeit.setDate(zeit.getDate() + 1);
+        zeit.setHours(9, 0, 0, 0);
+      }
+      if (zeit) {
+        text = text
+          .replace(/\bum \d{1,2}(:\d{2})? ?(uhr)?\b/i, "")
+          .replace(/\b(heute|morgen)\b/gi, "")
+          .replace(/\s+/g, " ").trim();
+      }
+      return { text: text || gesagt, zeit: zeit };
+    }
+
+    micBtn.onclick = () => {
+      if (rec) { rec.stop(); return; }
+      rec = new SR();
+      rec.lang = "de-DE";
+      rec.interimResults = false;
+      micBtn.classList.add("aufnahme");
+      micBtn.textContent = "⏹";
+      rec.onresult = e => {
+        const gesagt = e.results[0][0].transcript;
+        const erg = parseSprache(gesagt);
+        const input = document.getElementById("newText");
+        input.value = erg.text;
+        input.dispatchEvent(new Event("input")); // Kategorie-Vorschlag anstoßen
+        if (erg.zeit) {
+          document.getElementById("newTime").value = App.toInputValue(erg.zeit);
+          App.toast("Verstanden: „" + erg.text + "“ – " + App.fmt(erg.zeit.getTime()));
+        } else {
+          App.toast("Verstanden: „" + erg.text + "“");
+        }
+      };
+      rec.onerror = e => {
+        if (e.error === "not-allowed") App.toast("Bitte Mikrofon-Zugriff erlauben 🎤");
+        else if (e.error !== "aborted") App.toast("Nichts verstanden – versuch es nochmal 🎤");
+      };
+      rec.onend = () => {
+        micBtn.classList.remove("aufnahme");
+        micBtn.textContent = "🎤";
+        rec = null;
+      };
+      rec.start();
+    };
+  })();
 
   for (const btn of document.querySelectorAll(".navbtn")) {
     btn.onclick = () => App.switchView(btn.dataset.view);

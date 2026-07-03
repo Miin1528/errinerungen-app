@@ -55,13 +55,17 @@
   App.switchView = function (name) {
     document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.dataset.view === name));
     document.querySelectorAll(".navbtn").forEach(b => b.classList.toggle("active", b.dataset.view === name));
-    document.getElementById("fabBtn").classList.toggle("hidden", name !== "liste");
+    document.getElementById("fabBtn").classList.toggle("hidden", name !== "liste" && name !== "kalender");
     window.scrollTo({ top: 0 });
   };
 
   // ---------- Bottom-Sheet ----------
   App.openSheet = function () {
     document.getElementById("newTime").value = App.toInputValue(App.suggestedDefaultTime());
+    document.getElementById("newRepeat").value = "";
+    App.sheetKat = "sonstiges";
+    App.sheetKatManuell = false;
+    App.renderKatChips();
     document.getElementById("backdrop").classList.add("show");
     document.getElementById("sheet").classList.add("open");
     setTimeout(() => document.getElementById("newText").focus(), 300);
@@ -80,6 +84,45 @@
     renderQuickTimes();
     renderStats();
     renderSuggestions();
+    renderKatFilter();
+    App.renderKatChips();
+    if (App.renderKalender) App.renderKalender();
+  };
+
+  // ---------- Kategorie-Filter über der Liste ----------
+  function renderKatFilter() {
+    const box = document.getElementById("katFilter");
+    box.innerHTML = "";
+    const alle = App.el("button", "chip kat" + (App.katFilter === null ? " active" : ""), "Alle");
+    alle.onclick = () => { App.katFilter = null; App.render(); };
+    box.appendChild(alle);
+    for (const k of App.KATEGORIEN) {
+      const chip = App.el("button", "chip kat" + (App.katFilter === k.id ? " active" : ""));
+      const dot = App.el("span", "dot");
+      dot.style.background = k.farbe;
+      chip.appendChild(dot);
+      chip.appendChild(document.createTextNode(k.icon + " " + k.name));
+      chip.onclick = () => { App.katFilter = App.katFilter === k.id ? null : k.id; App.render(); };
+      box.appendChild(chip);
+    }
+  }
+
+  // ---------- Kategorie-Auswahl im Sheet ----------
+  App.sheetKat = "sonstiges";
+  App.sheetKatManuell = false;
+  App.renderKatChips = function () {
+    const box = document.getElementById("katChips");
+    if (!box) return;
+    box.innerHTML = "";
+    for (const k of App.KATEGORIEN) {
+      const chip = App.el("button", "chip kat" + (App.sheetKat === k.id ? " active" : ""));
+      const dot = App.el("span", "dot");
+      dot.style.background = k.farbe;
+      chip.appendChild(dot);
+      chip.appendChild(document.createTextNode(k.icon + " " + k.name));
+      chip.onclick = () => { App.sheetKat = k.id; App.sheetKatManuell = true; App.renderKatChips(); };
+      box.appendChild(chip);
+    }
   };
 
   function renderGreeting() {
@@ -121,18 +164,25 @@
     let items = App.reminders.slice().sort((a, b) => a.dueAt - b.dueAt);
     if (App.filter === "offen") items = items.filter(r => r.status === "offen");
     if (App.filter === "erledigt") items = items.filter(r => r.status === "erledigt").sort((a, b) => (b.doneAt || 0) - (a.doneAt || 0));
+    if (App.suche) items = items.filter(r => r.text.toLowerCase().includes(App.suche));
+    if (App.katFilter) items = items.filter(r => (r.kat || "sonstiges") === App.katFilter);
     if (!items.length) {
-      ul.appendChild(App.el("div", "empty", App.filter === "erledigt" ? "Noch nichts erledigt." : "Keine Erinnerungen – tippe auf ➕ und schreib dir etwas auf! 📝"));
+      ul.appendChild(App.el("div", "empty", App.suche || App.katFilter ? "Nichts gefunden. 🔍" : (App.filter === "erledigt" ? "Noch nichts erledigt." : "Keine Erinnerungen – tippe auf ➕ und schreib dir etwas auf! 📝")));
       return;
     }
     items.forEach((r, i) => {
       const li = App.el("li", "reminder" + (r.status === "erledigt" ? " done" : (r.dueAt <= now ? " due" : "")));
       li.dataset.id = r.id;
       li.style.animationDelay = Math.min(i * 40, 320) + "ms";
+      li.style.borderLeft = "4px solid " + App.katById(r.kat).farbe;
       const top = App.el("div", "top");
       top.appendChild(App.el("div", "text", r.text));
       top.appendChild(App.el("div", "when", App.fmt(r.dueAt)));
       li.appendChild(top);
+      const kat = App.katById(r.kat);
+      const infoTeile = [kat.icon + " " + kat.name];
+      if (r.repeat) infoTeile.push("🔁 " + ({ taeglich: "täglich", woechentlich: "wöchentlich", monatlich: "monatlich" })[r.repeat]);
+      li.appendChild(App.el("div", "katinfo", infoTeile.join(" · ")));
       if (r.status === "offen" && r.lastNotifiedAt) {
         const nextAt = r.lastNotifiedAt + App.reRemindMs();
         li.appendChild(App.el("div", "meta", "🔁 " + r.notifyCount + "× erinnert – nächste Wieder-Erinnerung " + App.fmt(nextAt)));
@@ -148,6 +198,11 @@
         const later = App.el("button", "small warn", "+2 Std. ⏳");
         later.onclick = () => App.snooze(r.id, 120);
         actions.appendChild(later);
+        const gcal = App.el("button", "small", "📅");
+        gcal.title = "In Google Kalender eintragen";
+        gcal.setAttribute("aria-label", "In Google Kalender eintragen");
+        gcal.onclick = () => window.open(App.gcalUrl(r), "_blank");
+        actions.appendChild(gcal);
       }
       const del = App.el("button", "small danger", "Löschen 🗑");
       del.onclick = () => App.removeReminder(r.id);
@@ -171,7 +226,7 @@
       chip.title = t.count + "× von dir eingetragen";
       chip.onclick = () => {
         const when = App.nextOccurrence(hour);
-        App.addReminder(t.text, when.getTime(), true);
+        App.addReminder(t.text, when.getTime(), true, { kat: t.kat || App.suggestKat(t.text) });
         App.toast("⚡ 1-Klick-Termin: „" + t.text + "“ – " + App.fmt(when.getTime()));
       };
       box.appendChild(chip);
