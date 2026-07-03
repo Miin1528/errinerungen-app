@@ -114,4 +114,56 @@
     App.kalMonat = d;
     App.renderKalender();
   };
+
+  // ---------- Export in den Handy-Kalender (.ics-Datei) ----------
+  function icsEscape(s) {
+    return s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
+  }
+
+  /* Erstellt eine iCalendar-Datei mit allen offenen Terminen des aktiven Kalenders */
+  App.icsInhalt = function () {
+    const p = n => String(n).padStart(2, "0");
+    const f = ts => {
+      const d = new Date(ts);
+      return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + "T" + p(d.getHours()) + p(d.getMinutes()) + "00";
+    };
+    const jetzt = new Date();
+    const stamp = jetzt.getUTCFullYear() + p(jetzt.getUTCMonth() + 1) + p(jetzt.getUTCDate()) +
+      "T" + p(jetzt.getUTCHours()) + p(jetzt.getUTCMinutes()) + p(jetzt.getUTCSeconds()) + "Z";
+    const rrule = { taeglich: "FREQ=DAILY", woechentlich: "FREQ=WEEKLY", monatlich: "FREQ=MONTHLY" };
+    const name = App.kalModus === "arbeit" ? "Arbeits-Kalender" : "Meine Erinnerungen";
+    const zeilen = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Meine Erinnerungen//DE", "CALSCALE:GREGORIAN", "X-WR-CALNAME:" + name];
+    let anzahl = 0;
+    for (const r of App.reminders) {
+      if (r.status !== "offen" || !imModus(r)) continue;
+      anzahl++;
+      zeilen.push(
+        "BEGIN:VEVENT",
+        "UID:" + r.id + "@meine-erinnerungen",
+        "DTSTAMP:" + stamp,
+        "DTSTART:" + f(r.dueAt),
+        "DTEND:" + f(r.dueAt + 30 * 60000),
+        "SUMMARY:" + icsEscape(r.text)
+      );
+      if (r.repeat && rrule[r.repeat]) zeilen.push("RRULE:" + rrule[r.repeat]);
+      zeilen.push("END:VEVENT");
+    }
+    zeilen.push("END:VCALENDAR");
+    return { inhalt: zeilen.join("\r\n"), anzahl: anzahl };
+  };
+
+  App.icsExport = function () {
+    const { inhalt, anzahl } = App.icsInhalt();
+    if (!anzahl) {
+      App.toast(App.kalModus === "arbeit" ? "Keine offenen Arbeitstermine zum Übertragen" : "Keine offenen Termine zum Übertragen");
+      return;
+    }
+    const blob = new Blob([inhalt], { type: "text/calendar" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = (App.kalModus === "arbeit" ? "arbeits-kalender" : "meine-erinnerungen") + ".ics";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    App.toast(anzahl + (anzahl === 1 ? " Termin" : " Termine") + " exportiert 📤 – Datei antippen, um sie in den Handy-Kalender zu übernehmen");
+  };
 })();
