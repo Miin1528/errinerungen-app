@@ -7,8 +7,9 @@
     text = text.trim();
     extra = extra || {};
     if (!text) { App.toast("Bitte zuerst einen Text eingeben ✏️"); return false; }
+    const id = Date.now() + "-" + Math.random().toString(36).slice(2, 7);
     App.reminders.push({
-      id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+      id: id,
       text: text,
       dueAt: dueAt,
       createdAt: Date.now(),
@@ -16,7 +17,10 @@
       lastNotifiedAt: null,
       notifyCount: 0,
       kat: extra.kat || null,
-      repeat: extra.repeat || null
+      repeat: extra.repeat || null,
+      // Wiederholungen behalten über alle Folge-Termine dieselbe Serien-Nummer,
+      // damit der Kalender-Export keine doppelten Serien anlegt
+      serieId: extra.repeat ? id : null
     });
     App.learnFrom(text, dueAt, extra.kat);
     App.save();
@@ -47,7 +51,8 @@
           id: Date.now() + "-" + Math.random().toString(36).slice(2, 7),
           text: r.text, dueAt: next.getTime(), createdAt: Date.now(),
           status: "offen", lastNotifiedAt: null, notifyCount: 0,
-          kat: r.kat || null, repeat: r.repeat
+          kat: r.kat || null, repeat: r.repeat,
+          serieId: r.serieId || r.id // Serien-Nummer weiterreichen
         });
         meldung = "Erledigt! 🎉 Nächster Termin: " + App.fmt(next.getTime());
       }
@@ -98,6 +103,7 @@
     r.dueAt = dueAt;
     r.kat = extra.kat;
     r.repeat = extra.repeat;
+    if (r.repeat && !r.serieId) r.serieId = r.id;
     if (dueAt > Date.now()) { // neu geplante Termine klingeln wieder frisch
       r.lastNotifiedAt = null;
       r.notifyCount = 0;
