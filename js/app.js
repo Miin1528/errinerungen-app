@@ -326,14 +326,22 @@
       if (e.data && e.data.typ === "benachrichtigung") handleNotifAction(e.data.action, e.data.id);
     });
     // Neue App-Version übernimmt? Einmal neu laden, damit Updates sofort ankommen
-    // (nur wenn vorher schon ein Service Worker aktiv war – nicht beim allerersten Besuch)
+    // (nur wenn vorher schon ein Service Worker aktiv war – nicht beim allerersten Besuch).
+    // Während man gerade eine Erinnerung eintippt, wird der Neustart aufgeschoben,
+    // damit kein ungespeicherter Entwurf verloren geht (Hinweis aus Code-Review).
     const hatteController = !!navigator.serviceWorker.controller;
     let neuGeladen = false;
-    navigator.serviceWorker.addEventListener("controllerchange", () => {
-      if (!hatteController || neuGeladen) return;
+    function updateAnwenden() {
+      if (neuGeladen) return;
+      const sheetOffen = document.getElementById("sheet").classList.contains("open");
+      if (sheetOffen) { App.updateAusstehend = updateAnwenden; return; }
       neuGeladen = true;
+      App.updateAusstehend = null;
       App.toast("App wurde aktualisiert ✨");
       setTimeout(() => location.reload(), 900);
+    }
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (hatteController) updateAnwenden();
     });
   }
 
