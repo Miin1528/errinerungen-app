@@ -82,6 +82,11 @@
   App.closeSheet = function () {
     document.getElementById("backdrop").classList.remove("show");
     document.getElementById("sheet").classList.remove("open");
+    if (App.updateAusstehend) { // aufgeschobenes App-Update jetzt anwenden
+      const anwenden = App.updateAusstehend;
+      App.updateAusstehend = null;
+      setTimeout(anwenden, 400); // erst das Sheet zu Ende animieren lassen
+    }
   };
 
   // ---------- Rendering ----------
