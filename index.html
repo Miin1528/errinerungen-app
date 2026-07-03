@@ -33,12 +33,27 @@
       <div class="chips" id="templateChips"></div>
     </div>
 
+    <input type="search" id="suchFeld" class="suchfeld" placeholder="🔍 Erinnerungen durchsuchen …" autocomplete="off">
+    <div class="chips katfilter" id="katFilter"></div>
+
     <div class="tabs" id="tabs">
       <button data-filter="offen" class="active">Offen</button>
       <button data-filter="erledigt">Erledigt</button>
       <button data-filter="alle">Alle</button>
     </div>
     <ul class="reminders" id="reminderList"></ul>
+  </section>
+
+  <!-- Ansicht: Kalender -->
+  <section class="view" data-view="kalender">
+    <div class="kalkopf">
+      <button class="small" id="kalZurueck" aria-label="Voriger Monat">‹</button>
+      <h2 class="viewtitle" id="kalTitel" style="margin:0"></h2>
+      <button class="small" id="kalVor" aria-label="Nächster Monat">›</button>
+    </div>
+    <div class="kalgrid" id="kalGrid"></div>
+    <h3 class="kaltag-titel" id="kalTagTitel"></h3>
+    <ul class="reminders" id="kalTagListe"></ul>
   </section>
 
   <!-- Ansicht: Profil / Gelerntes -->
@@ -119,7 +134,8 @@
 <button class="fab" id="fabBtn" aria-label="Neue Erinnerung anlegen">+</button>
 
 <nav class="bottomnav">
-  <button class="navbtn active" data-view="liste"><span class="ico">📋</span>Erinnerungen</button>
+  <button class="navbtn active" data-view="liste"><span class="ico">📋</span>Liste</button>
+  <button class="navbtn" data-view="kalender"><span class="ico">📅</span>Kalender</button>
   <button class="navbtn" data-view="profil"><span class="ico">🧠</span>Profil</button>
   <button class="navbtn" data-view="einstellungen"><span class="ico">⚙️</span>Einstellungen</button>
 </nav>
@@ -128,9 +144,21 @@
 <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-label="Neue Erinnerung">
   <div class="grip" aria-hidden="true"></div>
   <h2>✏️ Neue Erinnerung</h2>
-  <input type="text" id="newText" list="suggestions" placeholder="Was soll ich mir merken?" autocomplete="off">
+  <div class="inputrow">
+    <input type="text" id="newText" list="suggestions" placeholder="Was soll ich mir merken?" autocomplete="off">
+    <button id="micBtn" class="mic" hidden aria-label="Erinnerung diktieren">🎤</button>
+  </div>
   <datalist id="suggestions"></datalist>
-  <input type="datetime-local" id="newTime">
+  <div class="inputrow">
+    <input type="datetime-local" id="newTime">
+    <select id="newRepeat" aria-label="Wiederholung">
+      <option value="">Einmalig</option>
+      <option value="taeglich">🔁 Täglich</option>
+      <option value="woechentlich">🔁 Wöchentlich</option>
+      <option value="monatlich">🔁 Monatlich</option>
+    </select>
+  </div>
+  <div class="chips" id="katChips"></div>
   <div class="chips" id="quickTimes"></div>
   <button class="primary big" id="addBtn">Speichern 💾</button>
 </div>
@@ -141,6 +169,7 @@
 <script src="js/learning.js"></script>
 <script src="js/notify.js"></script>
 <script src="js/ui.js"></script>
+<script src="js/kalender.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
