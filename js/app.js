@@ -88,6 +88,27 @@
     } else finish();
   };
 
+  /* Bestehende Erinnerung ändern (Text, Zeit, Kategorie, Wiederholung) */
+  App.updateReminder = function (id, text, dueAt, extra) {
+    const r = App.reminders.find(x => x.id === id);
+    text = text.trim();
+    if (!r) return false;
+    if (!text) { App.toast("Bitte zuerst einen Text eingeben ✏️"); return false; }
+    r.text = text;
+    r.dueAt = dueAt;
+    r.kat = extra.kat;
+    r.repeat = extra.repeat;
+    if (dueAt > Date.now()) { // neu geplante Termine klingeln wieder frisch
+      r.lastNotifiedAt = null;
+      r.notifyCount = 0;
+    }
+    App.save();
+    App.render();
+    App.syncPush();
+    App.toast("Geändert: „" + text + "“ – " + App.fmt(dueAt) + " ✅");
+    return true;
+  };
+
   App.addAndClear = function () {
     const textInput = document.getElementById("newText");
     const timeInput = document.getElementById("newTime");
@@ -97,8 +118,12 @@
       kat: App.sheetKat || "sonstiges",
       repeat: document.getElementById("newRepeat").value || null
     };
-    if (App.addReminder(textInput.value, due, false, extra)) {
+    const erfolgreich = App.editId
+      ? App.updateReminder(App.editId, textInput.value, due, extra)
+      : App.addReminder(textInput.value, due, false, extra);
+    if (erfolgreich) {
       textInput.value = "";
+      App.editId = null;
       App.closeSheet();
     }
   };
@@ -311,7 +336,7 @@
     });
   }
 
-  document.getElementById("fabBtn").onclick = App.openSheet;
+  document.getElementById("fabBtn").onclick = () => App.openSheet();
   document.getElementById("backdrop").onclick = App.closeSheet;
   document.getElementById("addBtn").onclick = App.addAndClear;
   document.getElementById("newText").addEventListener("keydown", e => { if (e.key === "Enter") App.addAndClear(); });

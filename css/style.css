@@ -378,6 +378,89 @@ li.reminder .katinfo { color: var(--muted); font-size: .8rem; margin-top: 4px; }
 .kaltag .dots i { width: 5px; height: 5px; border-radius: 50%; }
 .kaltag-titel { margin: 16px 2px 10px; font-size: .95rem; color: var(--muted); font-weight: 600; }
 
+/* ---------- Glas-Design: durchscheinende Flächen mit Blur ---------- */
+:root, [data-theme="dunkel"] {
+  --glass: rgba(30, 32, 44, .55);
+  --glass2: rgba(46, 48, 62, .42);
+  --glassline: rgba(255, 255, 255, .09);
+  --blob1: rgba(240, 168, 60, .16);
+  --blob2: rgba(224, 122, 63, .12);
+  --blob3: rgba(92, 157, 191, .10);
+}
+[data-theme="hell"] {
+  --glass: rgba(255, 253, 248, .55);
+  --glass2: rgba(255, 250, 238, .5);
+  --glassline: rgba(120, 95, 40, .18);
+  --blob1: rgba(240, 168, 60, .22);
+  --blob2: rgba(224, 122, 63, .14);
+  --blob3: rgba(92, 157, 191, .14);
+}
+
+/* Weiche Farb-Blobs im Hintergrund, damit das Glas etwas zu brechen hat */
+body::before, body::after {
+  content: "";
+  position: fixed;
+  border-radius: 50%;
+  z-index: -1;
+  pointer-events: none;
+}
+body::before {
+  width: 70vmax; height: 70vmax;
+  top: -25vmax; right: -25vmax;
+  background: radial-gradient(circle, var(--blob1) 0%, transparent 62%);
+  animation: schweben 26s ease-in-out infinite;
+}
+body::after {
+  width: 60vmax; height: 60vmax;
+  bottom: -20vmax; left: -25vmax;
+  background: radial-gradient(circle, var(--blob2) 0%, var(--blob3) 40%, transparent 65%);
+  animation: schweben 32s ease-in-out infinite reverse;
+}
+@keyframes schweben {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-5vmax, 4vmax) scale(1.08); }
+}
+
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .card, li.reminder, .tabs, .banner, #toast, .stat {
+    background: var(--glass);
+    border-color: var(--glassline);
+    backdrop-filter: blur(16px) saturate(1.4);
+    -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  }
+  .topbar, .bottomnav {
+    background: color-mix(in srgb, var(--bg) 52%, transparent);
+    border-color: var(--glassline);
+    backdrop-filter: blur(22px) saturate(1.5);
+    -webkit-backdrop-filter: blur(22px) saturate(1.5);
+  }
+  .sheet {
+    background: var(--glass);
+    border-color: var(--glassline);
+    backdrop-filter: blur(26px) saturate(1.5);
+    -webkit-backdrop-filter: blur(26px) saturate(1.5);
+  }
+  input[type=text], input[type=url], input[type=datetime-local], input[type=number], select,
+  .suchfeld, button, .chip {
+    background: var(--glass2);
+    border-color: var(--glassline);
+  }
+  .chip.active { background: color-mix(in srgb, var(--accent) 22%, var(--glass2)); border-color: var(--accent); }
+  .kaltag { background: var(--glass2); border-color: var(--glassline); }
+  .tabs button { background: transparent; border: none; }
+  /* Farbige Elemente behalten ihren Verlauf */
+  button.primary, .fab, .tabs button.active, .kaltag.aktiv {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border: none;
+  }
+  button.ok { border: 1px solid var(--ok); }
+  button.warn { border: 1px solid var(--warn); }
+  button.danger { border: 1px solid var(--danger); }
+  li.reminder.due { border-color: var(--warn); }
+  .banner { background: color-mix(in srgb, var(--warn) 16%, var(--glass)); }
+  #toast { border-color: var(--accent); }
+}
+
 /* ---------- Reduzierte Bewegung ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }

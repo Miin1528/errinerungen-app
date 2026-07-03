@@ -85,6 +85,11 @@
         const done = App.el("button", "small ok", "Erledigt ✓");
         done.onclick = () => App.markDone(r.id);
         actions.appendChild(done);
+        const edit = App.el("button", "small", "✏️");
+        edit.title = "Bearbeiten";
+        edit.setAttribute("aria-label", "Bearbeiten");
+        edit.onclick = () => App.openSheet(r.id);
+        actions.appendChild(edit);
       }
       const gcal = App.el("button", "small", "📅 Google Kalender");
       gcal.onclick = () => window.open(App.gcalUrl(r), "_blank");
