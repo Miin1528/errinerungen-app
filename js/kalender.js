@@ -120,6 +120,26 @@
     return s.replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\n/g, "\\n");
   }
 
+  /* iCalendar erlaubt max. 75 Bytes pro Zeile – längere werden mit
+     "CRLF + Leerzeichen" umgebrochen (RFC 5545, "line folding") */
+  const enc = new TextEncoder();
+  function icsFold(zeile) {
+    if (enc.encode(zeile).length <= 75) return zeile;
+    const teile = [];
+    let aktuell = "";
+    for (const zeichen of zeile) {
+      const limit = teile.length ? 74 : 75; // Folgezeilen beginnen mit Leerzeichen
+      if (enc.encode(aktuell + zeichen).length > limit) {
+        teile.push(aktuell);
+        aktuell = zeichen;
+      } else {
+        aktuell += zeichen;
+      }
+    }
+    teile.push(aktuell);
+    return teile.map((t, i) => (i ? " " + t : t)).join("\r\n");
+  }
+
   /* Erstellt eine iCalendar-Datei mit allen offenen Terminen des aktiven Kalenders */
   App.icsInhalt = function () {
     const p = n => String(n).padStart(2, "0");
@@ -139,7 +159,9 @@
       anzahl++;
       zeilen.push(
         "BEGIN:VEVENT",
-        "UID:" + r.id + "@meine-erinnerungen",
+        // Wiederholungen exportieren mit stabiler Serien-Nummer, damit ein
+        // erneuter Import keine doppelte Serie anlegt
+        "UID:" + (r.serieId || r.id) + "@meine-erinnerungen",
         "DTSTAMP:" + stamp,
         "DTSTART:" + f(r.dueAt),
         "DTEND:" + f(r.dueAt + 30 * 60000),
@@ -149,7 +171,7 @@
       zeilen.push("END:VEVENT");
     }
     zeilen.push("END:VCALENDAR");
-    return { inhalt: zeilen.join("\r\n"), anzahl: anzahl };
+    return { inhalt: zeilen.map(icsFold).join("\r\n"), anzahl: anzahl };
   };
 
   App.icsExport = function () {
