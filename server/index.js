@@ -44,7 +44,45 @@ app.use((req, res, next) => {
   next();
 });
 
-app.get("/", (req, res) => res.json({ app: "erinnerungen-push-server", ok: true }));
+// Optionale Server-KI: Claude beantwortet freie Fragen des App-Assistenten,
+// sobald ANTHROPIC_API_KEY gesetzt ist (siehe README)
+let anthropic = null;
+if (process.env.ANTHROPIC_API_KEY) {
+  const Anthropic = require("@anthropic-ai/sdk");
+  anthropic = new Anthropic(); // liest ANTHROPIC_API_KEY aus der Umgebung
+}
+
+app.get("/", (req, res) => res.json({ app: "erinnerungen-push-server", ok: true, ki: !!anthropic }));
+
+app.post("/assistent", async (req, res) => {
+  if (!anthropic) return res.status(503).json({ fehler: "Keine KI konfiguriert – ANTHROPIC_API_KEY setzen" });
+  const { frage, kontext } = req.body || {};
+  if (!frage || typeof frage !== "string") return res.status(400).json({ fehler: "frage nötig" });
+  try {
+    const antwort = await anthropic.messages.create({
+      model: "claude-opus-4-8",
+      max_tokens: 1024, // Assistenten-Antworten sind bewusst kurz
+      thinking: { type: "adaptive" },
+      system: "Du bist der freundliche Assistent der Erinnerungs-App „Meine Erinnerungen“. " +
+        "Antworte kurz, warm und auf Deutsch. Nutze den mitgelieferten Kontext über die Erinnerungen " +
+        "und Gewohnheiten des Nutzers. Du kannst selbst keine Erinnerungen anlegen – wenn der Nutzer " +
+        "eine anlegen möchte, sag ihm, dass er es direkt so formulieren kann: „Erinnere mich morgen um 9 an …“.",
+      messages: [{
+        role: "user",
+        content: (typeof kontext === "string" && kontext ? "Kontext:\n" + kontext.slice(0, 4000) + "\n\n" : "") + frage.slice(0, 2000)
+      }]
+    });
+    const text = antwort.content
+      .filter(block => block.type === "text")
+      .map(block => block.text)
+      .join("\n")
+      .trim();
+    res.json({ antwort: text || "Dazu fällt mir gerade nichts ein – frag mich gern anders. 🙈" });
+  } catch (e) {
+    console.error("KI-Anfrage fehlgeschlagen:", e.message);
+    res.status(502).json({ fehler: "KI-Anfrage fehlgeschlagen" });
+  }
+});
 
 app.get("/vapidPublicKey", (req, res) => res.type("text/plain").send(daten.vapid.publicKey));
 

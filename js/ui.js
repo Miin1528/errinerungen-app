@@ -56,6 +56,7 @@
     document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.dataset.view === name));
     document.querySelectorAll(".navbtn").forEach(b => b.classList.toggle("active", b.dataset.view === name));
     document.getElementById("fabBtn").classList.toggle("hidden", name !== "liste" && name !== "kalender");
+    if (name === "assistent" && App.assistentStart) App.assistentStart();
     window.scrollTo({ top: 0 });
   };
 

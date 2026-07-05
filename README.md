@@ -26,6 +26,11 @@ auf deinem Gerät.
   und einem Knopf, der einen Termin zusätzlich in deinen Google Kalender überträgt.
 - **🎤 Spracheingabe** – Erinnerungen diktieren; „morgen um 9 Uhr Zahnarzt anrufen"
   setzt Text und Uhrzeit automatisch (Web Speech API, sofern der Browser sie kann).
+- **🤖 KI-Assistent** – ein Chat, der deine Sprache versteht: „Erinnere mich jeden Tag
+  um 8 an Medikamente", „Was steht heute an?", „Zahnarzt erledigt", „Tipps für mich".
+  Drei Stufen: eingebaute Logik (immer, auch offline auf GitHub Pages), optional eine
+  **Geräte-KI** direkt im Browser (Chrome Prompt API) und optional eine echte
+  **Server-KI mit Claude** über den Push-Server (siehe `server/README.md`).
 - **⚙️ Einstellungen** – Name für die Begrüßung, Design (Dunkel/Hell/System),
   Wieder-Erinnerungs-Intervall, Benachrichtigungen/Ton/Vibration, Test-Benachrichtigung,
   App-Installation, Daten-Export/-Import, optionale Push-Server-URL.

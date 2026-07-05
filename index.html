@@ -61,11 +61,20 @@
     <ul class="reminders" id="kalTagListe"></ul>
   </section>
 
-  <!-- Ansicht: Profil / Gelerntes -->
-  <section class="view" data-view="profil">
-    <h2 class="viewtitle">🧠 Was ich über dich gelernt habe</h2>
-    <div class="stats" id="statsGrid"></div>
-    <p class="hint" id="learnHint"></p>
+  <!-- Ansicht: KI-Assistent (mit Lernprofil) -->
+  <section class="view" data-view="assistent">
+    <div class="chat" id="chatVerlauf"></div>
+    <div class="chips" id="chatVorschlaege"></div>
+    <div class="inputrow chat-eingabe">
+      <input type="text" id="chatEingabe" placeholder="Schreib mir – z. B. „Erinnere mich morgen um 9 an …“" autocomplete="off">
+      <button id="chatMic" class="mic" hidden aria-label="Nachricht diktieren">🎤</button>
+      <button class="primary sendbtn" id="chatSendenBtn" aria-label="Senden">➤</button>
+    </div>
+    <details class="card group lernpanel">
+      <summary>🧠 Was ich über dich gelernt habe</summary>
+      <div class="stats" id="statsGrid"></div>
+      <p class="hint" id="learnHint"></p>
+    </details>
   </section>
 
   <!-- Ansicht: Einstellungen -->
@@ -110,6 +119,15 @@
     </div>
 
     <div class="card group">
+      <h2>KI-Assistent</h2>
+      <div class="setting-row">
+        <label for="kiToggle">Geräte-KI nutzen <span class="sub">(experimentell – Sprachmodell direkt auf deinem Gerät, Chrome)</span></label>
+        <label class="switch"><input type="checkbox" id="kiToggle"><span></span></label>
+      </div>
+      <p class="hint">Der Assistent funktioniert immer mit eingebauter Logik. Für freie Fragen kann er zusätzlich eine Geräte-KI nutzen – oder eine echte Server-KI (Claude), wenn du beim Push-Server einen <code>ANTHROPIC_API_KEY</code> hinterlegst und die Server-URL unten einträgst.</p>
+    </div>
+
+    <div class="card group">
       <h2>App &amp; Daten</h2>
       <div class="setting-row">
         <label>Als App installieren</label>
@@ -141,7 +159,7 @@
 <nav class="bottomnav">
   <button class="navbtn active" data-view="liste"><span class="ico">📋</span>Liste</button>
   <button class="navbtn" data-view="kalender"><span class="ico">📅</span>Kalender</button>
-  <button class="navbtn" data-view="profil"><span class="ico">🧠</span>Profil</button>
+  <button class="navbtn" data-view="assistent"><span class="ico">🤖</span>Assistent</button>
   <button class="navbtn" data-view="einstellungen"><span class="ico">⚙️</span>Einstellungen</button>
 </nav>
 
@@ -175,6 +193,7 @@
 <script src="js/notify.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/kalender.js"></script>
+<script src="js/assistent.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

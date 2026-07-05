@@ -2,7 +2,7 @@
 /* Service Worker: Offline-Cache, System-Benachrichtigungen (Android),
    Aktions-Buttons in Benachrichtigungen, Web-Push vom optionalen Server */
 
-const CACHE = "erinnerungen-v8";
+const CACHE = "erinnerungen-v9";
 const ASSETS = [
   "./",
   "./index.html",
@@ -12,6 +12,7 @@ const ASSETS = [
   "./js/notify.js",
   "./js/ui.js",
   "./js/kalender.js",
+  "./js/assistent.js",
   "./js/app.js",
   "./manifest.webmanifest",
   "./icons/icon-192.png",
