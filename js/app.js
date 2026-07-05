@@ -250,6 +250,9 @@
       App.toast("Wieder-Erinnerung alle " + v + " Minuten");
     };
     nt.onchange = () => { s.notifications = nt.checked; App.save(); if (nt.checked) App.requestNotifPermission(); };
+    const ki = document.getElementById("kiToggle");
+    ki.checked = s.geraeteKI !== false;
+    ki.onchange = () => { s.geraeteKI = ki.checked; App.save(); };
     so.onchange = () => { s.sound = so.checked; App.save(); };
     vi.onchange = () => { s.vibration = vi.checked; App.save(); };
     pu.onchange = () => {
@@ -395,67 +398,69 @@
   // ---------- Spracheingabe (Web Speech API) ----------
   (function initSprache() {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const micBtn = document.getElementById("micBtn");
-    if (!SR) return; // Browser ohne Spracherkennung: Knopf bleibt versteckt
-    micBtn.hidden = false;
-    let rec = null;
+    if (!SR) return; // Browser ohne Spracherkennung: Knöpfe bleiben versteckt
 
-    // versteht z. B. "morgen um 9 Uhr Zahnarzt anrufen"
-    function parseSprache(gesagt) {
-      let text = gesagt;
-      let zeit = null;
-      const um = text.match(/\bum (\d{1,2})(?::(\d{2}))? ?(uhr)?\b/i);
-      const morgen = /\bmorgen\b/i.test(text);
-      if (um) {
-        zeit = new Date();
-        zeit.setHours(parseInt(um[1], 10), um[2] ? parseInt(um[2], 10) : 0, 0, 0);
-        if (morgen) zeit.setDate(zeit.getDate() + 1);
-        else if (zeit.getTime() <= Date.now()) zeit.setDate(zeit.getDate() + 1);
-      } else if (morgen) {
-        zeit = new Date();
-        zeit.setDate(zeit.getDate() + 1);
-        zeit.setHours(9, 0, 0, 0);
-      }
-      if (zeit) {
-        text = text
-          .replace(/\bum \d{1,2}(:\d{2})? ?(uhr)?\b/i, "")
-          .replace(/\b(heute|morgen)\b/gi, "")
-          .replace(/\s+/g, " ").trim();
-      }
-      return { text: text || gesagt, zeit: zeit };
+    function bindDiktat(micBtn, fertig) {
+      micBtn.hidden = false;
+      let rec = null;
+      micBtn.onclick = () => {
+        if (rec) { rec.stop(); return; }
+        rec = new SR();
+        rec.lang = "de-DE";
+        rec.interimResults = false;
+        micBtn.classList.add("aufnahme");
+        micBtn.textContent = "⏹";
+        rec.onresult = e => fertig(e.results[0][0].transcript);
+        rec.onerror = e => {
+          if (e.error === "not-allowed") App.toast("Bitte Mikrofon-Zugriff erlauben 🎤");
+          else if (e.error !== "aborted") App.toast("Nichts verstanden – versuch es nochmal 🎤");
+        };
+        rec.onend = () => {
+          micBtn.classList.remove("aufnahme");
+          micBtn.textContent = "🎤";
+          rec = null;
+        };
+        rec.start();
+      };
     }
 
-    micBtn.onclick = () => {
-      if (rec) { rec.stop(); return; }
-      rec = new SR();
-      rec.lang = "de-DE";
-      rec.interimResults = false;
-      micBtn.classList.add("aufnahme");
-      micBtn.textContent = "⏹";
-      rec.onresult = e => {
-        const gesagt = e.results[0][0].transcript;
-        const erg = parseSprache(gesagt);
-        const input = document.getElementById("newText");
-        input.value = erg.text;
-        input.dispatchEvent(new Event("input")); // Kategorie-Vorschlag anstoßen
-        if (erg.zeit) {
-          document.getElementById("newTime").value = App.toInputValue(erg.zeit);
-          App.toast("Verstanden: „" + erg.text + "“ – " + App.fmt(erg.zeit.getTime()));
-        } else {
-          App.toast("Verstanden: „" + erg.text + "“");
-        }
-      };
-      rec.onerror = e => {
-        if (e.error === "not-allowed") App.toast("Bitte Mikrofon-Zugriff erlauben 🎤");
-        else if (e.error !== "aborted") App.toast("Nichts verstanden – versuch es nochmal 🎤");
-      };
-      rec.onend = () => {
-        micBtn.classList.remove("aufnahme");
-        micBtn.textContent = "🎤";
-        rec = null;
-      };
-      rec.start();
-    };
+    // Mikrofon im Eingabe-Sheet: Zeit verstehen und Felder füllen
+    bindDiktat(document.getElementById("micBtn"), gesagt => {
+      const erg = App.parseZeitText(gesagt);
+      const input = document.getElementById("newText");
+      input.value = erg.rest;
+      input.dispatchEvent(new Event("input")); // Kategorie-Vorschlag anstoßen
+      if (erg.repeat) document.getElementById("newRepeat").value = erg.repeat;
+      if (erg.zeit) {
+        document.getElementById("newTime").value = App.toInputValue(erg.zeit);
+        App.toast("Verstanden: „" + erg.rest + "“ – " + App.fmt(erg.zeit.getTime()));
+      } else {
+        App.toast("Verstanden: „" + erg.rest + "“");
+      }
+    });
+
+    // Mikrofon im Assistenten-Chat: diktieren und direkt senden
+    bindDiktat(document.getElementById("chatMic"), gesagt => App.chatSenden(gesagt));
+  })();
+
+  // ---------- KI-Assistent: Chat-Verkabelung ----------
+  document.getElementById("chatSendenBtn").onclick = () => App.chatSenden();
+  document.getElementById("chatEingabe").addEventListener("keydown", e => {
+    if (e.key === "Enter") App.chatSenden();
+  });
+  (function initChatVorschlaege() {
+    const box = document.getElementById("chatVorschlaege");
+    const vorschlaege = [
+      ["📋 Was steht heute an?", "Was steht heute an?"],
+      ["💡 Tipps für mich", "Tipps für mich"],
+      ["🗓 Diese Woche?", "Was steht diese Woche an?"],
+      ["❓ Was kannst du?", "Hilfe"]
+    ];
+    for (const [label, text] of vorschlaege) {
+      const chip = App.el("button", "chip", label);
+      chip.onclick = () => App.chatSenden(text);
+      box.appendChild(chip);
+    }
   })();
 
   for (const btn of document.querySelectorAll(".navbtn")) {

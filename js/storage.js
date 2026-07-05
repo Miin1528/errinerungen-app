@@ -37,7 +37,8 @@ App.defaultProfile = function () {
       vibration: true,
       theme: "system",   // system | dunkel | hell
       name: "",
-      pushServerUrl: ""  // optional: eigener Web-Push-Server (siehe server/)
+      pushServerUrl: "", // optional: eigener Web-Push-Server (siehe server/)
+      geraeteKI: true    // Geräte-KI (Chrome Prompt API) für den Assistenten nutzen
     },
     firstUse: Date.now()
   };

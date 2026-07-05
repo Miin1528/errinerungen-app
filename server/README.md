@@ -27,6 +27,21 @@ für **Push-Benachrichtigungen bei komplett geschlossener App**.
    unter **Einstellungen → Push-Server-URL** eintragen. Die App verbindet sich, fragt
    nach der Benachrichtigungs-Erlaubnis und synchronisiert ab dann automatisch.
 
+## Server-KI (optional): der Assistent wird zur echten KI
+
+Die App hat einen eingebauten Assistenten, der auch ohne Server funktioniert.
+Wenn du diesem Server zusätzlich einen Claude-API-Schlüssel gibst, beantwortet
+**Claude** die freien Fragen des Assistenten – mit dem Wissen über die
+Erinnerungen und Gewohnheiten des Nutzers als Kontext:
+
+1. API-Schlüssel auf https://platform.claude.com erstellen
+2. Beim Hosting die Umgebungsvariable `ANTHROPIC_API_KEY` setzen
+3. In der App die Push-Server-URL eintragen (Einstellungen) – fertig.
+   Antworten des Assistenten zeigen dann „☁️ Server-KI" als Quelle.
+
+Der Endpunkt ist `POST /assistent` mit `{ "frage": "...", "kontext": "..." }`
+und antwortet mit `{ "antwort": "..." }` (Modell: `claude-opus-4-8`).
+
 ## Lokal testen
 
 ```bash
